@@ -4,14 +4,19 @@ import './App.css';
 import {BrowserRouter as Router} from 'react-router-dom';
 //import User from './Server/user';
 
-import Route from 'react-router-dom/Route';
+import {Route} from 'react-router-dom';
 import Particles from 'react-particles-js';
 import MyTrips from './components/MyTrips/MyTrips';
 import AddTrip from './components/AddTrip/AddTrip';
 import Navigation from './components/Navigation/Navigation';
 import TripPlanning from './components/TripPlanning/TripPlanning';
 import Home from './components/Home/Home'
-import SignUpForm from './components/Login/SignUp';
+
+import App1 from './components/Login';
+// import Register from './components/Login/Register'
+// import Profile from './components/Login/profile'
+// import Landing from './components/Login/Landing'
+
 import SignInForm from './components/Login/SignIn';
 
 
@@ -36,12 +41,12 @@ function App() {
         
         
           
-          
+               
 
-              <Route exact path="/" component={SignUpForm} />
+              <Route exact path="/" component={App1} />
               
-              <Route path="/sign-in" component={SignInForm}/>
-           
+              <Route path ="/login" exact strict component = {SignInForm} />
+
         
 
         

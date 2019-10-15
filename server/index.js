@@ -1,29 +1,95 @@
-const path = require('path')
-const express = require('express')
-const bodyParser = require('body-parser')
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
-var db = require('./database')
-
-const ENV = process.env.NODE_ENV;
-const PORT = process.env.PORT || 5000;
-
-const app = express()
-app.use(express.json());
-app.use(express.urlencoded({extended: false}));
+const Sequelize = require('sequelize');
+const sequelize = new Sequelize('postgres://postgres:admin@localhost:5432/dojo');
+process.env.SECRET_KEY = 'secret'
 app.use(bodyParser.json());
+app.use(cors());
 
-app.use('/api/users', require('./api/users'));
-app.post('api/Signup', function(request, response){
-    console.log(request.body);
+sequelize
+.authenticate()
+.then(() => {
+  console.log('connectd to PostgreSQL');
 })
-app.listen(PORT, () => {
-    console.log(`server listening at port ${PORT}...`);
+.catch(err => {
+  console.error('error connection PostgreSQL:', err);
 });
 
-db.query('SELECT NOW()', (err, res) => {
-    if (err.error)
-      return console.log(err.error);
-    console.log(`PostgreSQL connected: ${res[0].now}.`);
+const NinjaTable = sequelize.define('userAccount', {
+    name: {type: Sequelize.STRING},
+    email: {type: Sequelize.STRING},
+    password: {type: Sequelize.STRING}
   });
 
-module.exports = app;
+// NinjaTable.sync({force: false}).then(() => {
+//     console.log('Table created!')
+//   });
+
+// app.get('/data', function(req,res){
+//   NinjaTable.findAll().then(data => {
+//     console.log(data);
+//     res.send(data);
+//   })
+// })
+
+app.post('/data', function(req,res){
+NinjaTable.create({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password
+})
+NinjaTable.findOne({
+  where: {
+    email:req.body.email
+  }
+}).then(Data => {
+  if(!Data){
+    bcrypt.hashSync(req.body.password, 10, (err, hash) =>{
+      req.body.password= hash
+      NinjaTable.query({
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password
+    }) .then(Data => {
+      res.json({ status: Data.email + 'registered'})
+    })
+    .catch(err => {
+      res.send('error: ' + err)
+    })
+    })
+  } else {
+    res.json({ error: 'user already exists'})
+  }
+})
+.then(data => {
+  console.log('Data success!');
+  
+});
+})
+
+app.get('/data', (req, res) => {
+  var decoded = jwt.verify(req.headers['authorization'], process.env.SECRET_KEY)
+
+  NinjaTable.findOne({
+    where: {
+      id: decoded.id
+    }
+  })
+    .then(user => {
+      if (user) {
+        res.json(user)
+      } else {
+        res.send('User does not exist')
+      }
+    })
+    .catch(err => {
+      res.send('error: ' + err)
+    })
+})
+
+app.listen(3210, ()=>{
+  console.log('Server @port 3210 running!')
+})
